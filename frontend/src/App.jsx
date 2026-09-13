@@ -1,0 +1,46 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Navbar from './components/Navbar';
+
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import AdminDashboard from './pages/AdminDashboard';
+import ManagerDashboard from './pages/ManagerDashboard';
+import AuthorityDashboard from './pages/AuthorityDashboard';
+import ShelterDetail from './pages/ShelterDetail';
+import RedistributeAction from './pages/RedistributeAction';
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <div className="app-shell">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+
+            <Route path="/admin" element={
+              <ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>
+            } />
+            <Route path="/manager" element={
+              <ProtectedRoute roles={['manager']}><ManagerDashboard /></ProtectedRoute>
+            } />
+            <Route path="/authority" element={
+              <ProtectedRoute roles={['user']}><AuthorityDashboard /></ProtectedRoute>
+            } />
+            <Route path="/shelters/:id" element={
+              <ProtectedRoute><ShelterDetail /></ProtectedRoute>
+            } />
+            <Route path="/shelters/:id/redistribute" element={
+              <ProtectedRoute roles={['user', 'admin']}><RedistributeAction /></ProtectedRoute>
+            } />
+          </Routes>
+        </div>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}

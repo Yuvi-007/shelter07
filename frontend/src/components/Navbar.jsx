@@ -1,0 +1,36 @@
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+export default function Navbar() {
+  const { auth, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const dashboardPath = auth
+    ? { admin: '/admin', manager: '/manager', user: '/authority' }[auth.user.role]
+    : '/';
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  return (
+    <nav className="navbar">
+      <Link to="/" className="brand">Shelter<span>X</span></Link>
+      <div className="nav-links">
+        {auth ? (
+          <>
+            <Link to={dashboardPath}>Dashboard</Link>
+            <span className="pill">{auth.user.name} · {auth.user.role}</span>
+            <button onClick={handleLogout}>Log out</button>
+          </>
+        ) : (
+          <>
+            <Link to="/login">Log in</Link>
+            <Link to="/signup">Sign up</Link>
+          </>
+        )}
+      </div>
+    </nav>
+  );
+}

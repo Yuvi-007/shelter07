@@ -1,0 +1,51 @@
+import jwt
+import datetime
+from functools import wraps
+from flask import request, jsonify
+from config import Config
+
+
+def generate_token(user):
+    payload = {
+        "id": user["id"],
+        "name": user["name"],
+        "email": user["email"],
+        "role": user["role"],
+        "shelter_id": user.get("shelter_id"),
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=Config.JWT_EXPIRY_HOURS),
+    }
+    return jwt.encode(payload, Config.SECRET_KEY, algorithm="HS256")
+
+
+def decode_token(token):
+    return jwt.decode(token, Config.SECRET_KEY, algorithms=["HS256"])
+
+
+def token_required(f):
+    """Requires a valid JWT. Attaches the decoded payload to request.user."""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return jsonify({"error": "Missing or invalid Authorization header"}), 401
+        token = auth_header.split(" ", 1)[1]
+        try:
+            request.user = decode_token(token)
+        except jwt.ExpiredSignatureError:
+            return jsonify({"error": "Token expired, please log in again"}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+        return f(*args, **kwargs)
+    return wrapper
+
+
+def roles_required(*allowed_roles):
+    """Stack under @token_required. Restricts an endpoint to specific roles."""
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            if request.user.get("role") not in allowed_roles:
+                return jsonify({"error": "You don't have permission to do that"}), 403
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
