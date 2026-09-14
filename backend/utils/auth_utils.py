@@ -3,6 +3,7 @@ import datetime
 from functools import wraps
 from flask import request, jsonify
 from config import Config
+from db import get_db_connection
 
 
 def generate_token(user):
@@ -35,6 +36,24 @@ def token_required(f):
             return jsonify({"error": "Token expired, please log in again"}), 401
         except jwt.InvalidTokenError:
             return jsonify({"error": "Invalid token"}), 401
+
+        conn = None
+        cursor = None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT is_active, role FROM users WHERE id = %s", (request.user["id"],))
+            current_user = cursor.fetchone()
+            if not current_user or not current_user["is_active"]:
+                return jsonify({"error": "Account is unavailable"}), 401
+            request.user["role"] = current_user["role"]
+        except Exception:
+            return jsonify({"error": "Unable to validate account"}), 500
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
         return f(*args, **kwargs)
     return wrapper
 

@@ -1,25 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { getRoleDashboardPath } from '../utils/rbac';
 
 export default function Signup() {
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'user' });
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { auth, login } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-
-  // If already logged in, redirect directly to active role dashboard
-  useEffect(() => {
-    if (auth?.user) {
-      navigate(getRoleDashboardPath(auth.user), { replace: true });
-    }
-  }, [auth, navigate]);
 
   const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
@@ -32,17 +24,12 @@ export default function Signup() {
     }
     setLoading(true);
     try {
-      // Public signups are strictly for citizens / users (role: 'user')
-      const data = await api.signup({
-        ...form,
-        role: 'user',
-        confirm_password: confirmPassword,
-      });
+      const data = await api.signup({ ...form, confirm_password: confirmPassword });
       login(data);
-      const dest = getRoleDashboardPath(data.user);
-      navigate(dest, { replace: true });
+      const dest = { admin: '/admin', manager: '/manager', authority: '/authority', user: '/authority' }[data.user.role] || '/';
+      navigate(dest);
     } catch (err) {
-      setError(err.message || 'Unable to create account');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -54,46 +41,21 @@ export default function Signup() {
         <Link to="/" className="auth-brand">Shelter<span>X</span></Link>
         <div className="auth-heading">
           <h1>Create Account</h1>
-          <p>Join ShelterX to access citizen emergency shelter services.</p>
+          <p>Join ShelterX to access emergency shelter services.</p>
         </div>
         <div className="field">
-          <label htmlFor="name">Full Name</label>
-          <input
-            id="name"
-            value={form.name}
-            onChange={update('name')}
-            placeholder="e.g. Rahul Sharma"
-            required
-          />
+          <label htmlFor="name">Name</label>
+          <input id="name" value={form.name} onChange={update('name')} required />
         </div>
         <div className="field">
-          <label htmlFor="email">Email Address</label>
-          <input
-            id="email"
-            type="email"
-            value={form.email}
-            onChange={update('email')}
-            placeholder="you@example.com"
-            required
-          />
+          <label htmlFor="email">Email</label>
+          <input id="email" type="email" value={form.email} onChange={update('email')} required />
         </div>
         <div className="field">
           <label htmlFor="password">Password</label>
           <div className="password-field">
-            <input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              value={form.password}
-              onChange={update('password')}
-              required
-              minLength={6}
-              placeholder="••••••••"
-            />
-            <button
-              className="password-toggle"
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-            >
+            <input id="password" type={showPassword ? 'text' : 'password'} value={form.password} onChange={update('password')} required minLength={6} />
+            <button className="password-toggle" type="button" onClick={() => setShowPassword(!showPassword)}>
               {showPassword ? 'Hide' : 'Show'}
             </button>
           </div>
@@ -108,13 +70,8 @@ export default function Signup() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               minLength={6}
-              placeholder="••••••••"
             />
-            <button
-              className="password-toggle"
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
+            <button className="password-toggle" type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
               {showConfirmPassword ? 'Hide' : 'Show'}
             </button>
           </div>

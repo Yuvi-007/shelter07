@@ -69,8 +69,21 @@ def get_occupancy_logs(shelter_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
+        if request.user["role"] == "manager":
+            cursor.execute("SELECT shelter_id FROM users WHERE id = %s", (request.user["id"],))
+            manager = cursor.fetchone()
+            if not manager or manager["shelter_id"] != shelter_id:
+                return jsonify({"error": "You can only view logs for your assigned shelter"}), 403
+
         cursor.execute(
-            "SELECT id, occupancy_count, logged_at FROM occupancy_logs WHERE shelter_id = %s ORDER BY logged_at ASC",
+            """
+            SELECT l.id, l.shelter_id, l.occupancy_count, l.logged_at,
+                   s.name AS shelter_name, s.total_capacity
+            FROM occupancy_logs l
+            JOIN shelters s ON s.id = l.shelter_id
+            WHERE l.shelter_id = %s
+            ORDER BY l.logged_at DESC
+            """,
             (shelter_id,),
         )
         return jsonify(cursor.fetchall())

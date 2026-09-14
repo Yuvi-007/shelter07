@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { api } from '../api';
 
 const AuthContext = createContext(null);
 
@@ -7,6 +8,20 @@ export function AuthProvider({ children }) {
     const stored = localStorage.getItem('shelterx_auth');
     return stored ? JSON.parse(stored) : null;
   });
+
+  useEffect(() => {
+    if (auth?.token) {
+      api.getMe(auth.token)
+        .then((dbUser) => {
+          if (dbUser && dbUser.id && dbUser.role !== auth.user?.role) {
+            const updated = { ...auth, user: { ...auth.user, ...dbUser } };
+            localStorage.setItem('shelterx_auth', JSON.stringify(updated));
+            setAuth(updated);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [auth?.token]);
 
   const login = (data) => {
     // data: { token, user }

@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { getRoleDashboardPath } from '../utils/rbac';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -10,15 +9,8 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { auth, login } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-
-  // If already logged in, redirect directly to active role dashboard
-  useEffect(() => {
-    if (auth?.user) {
-      navigate(getRoleDashboardPath(auth.user), { replace: true });
-    }
-  }, [auth, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,10 +19,10 @@ export default function Login() {
     try {
       const data = await api.login({ email, password });
       login(data);
-      const dest = getRoleDashboardPath(data.user);
-      navigate(dest, { replace: true });
+      const dest = { admin: '/admin', manager: '/manager', authority: '/authority', user: '/authority' }[data.user.role] || '/';
+      navigate(dest);
     } catch (err) {
-      setError(err.message || 'Login failed');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -46,31 +38,13 @@ export default function Login() {
         </div>
         <div className="field">
           <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            placeholder="you@example.com"
-          />
+          <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </div>
         <div className="field">
           <label htmlFor="password">Password</label>
           <div className="password-field">
-            <input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-            />
-            <button
-              className="password-toggle"
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-            >
+            <input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <button className="password-toggle" type="button" onClick={() => setShowPassword(!showPassword)}>
               {showPassword ? 'Hide' : 'Show'}
             </button>
           </div>
@@ -78,7 +52,7 @@ export default function Login() {
         </div>
         {error && <p className="error-text">{error}</p>}
         <button className="btn accent auth-submit" type="submit" disabled={loading}>
-          {loading ? 'Logging in…' : 'Log In'}
+          {loading ? 'Logging in…' : 'Log in'}
         </button>
         <p className="muted auth-link-text">
           Don't have an account? <Link to="/signup">Sign Up</Link>

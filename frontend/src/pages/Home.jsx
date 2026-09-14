@@ -1,6 +1,24 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
+  const { auth } = useAuth();
+  const user = auth?.user;
+
+  const getDashboardDestination = () => {
+    if (!user) return '/signup';
+    if (user.role === 'admin') return '/admin';
+    if (user.role === 'manager') return '/manager';
+    return '/authority';
+  };
+
+  const getDashboardLabel = () => {
+    if (!user) return 'Access Platform';
+    if (user.role === 'admin') return 'Open Admin Dashboard';
+    if (user.role === 'manager') return 'Open My Shelter';
+    return 'Open Region Overview';
+  };
+
   return (
     <main className="home-page">
       <section className="hero">
@@ -12,7 +30,7 @@ export default function Home() {
             overcrowding risks, and make faster redistribution decisions.
           </p>
           <div className="actions">
-            <Link to="/signup"><button className="btn accent">Access Platform</button></Link>
+            <Link to={getDashboardDestination()}><button className="btn accent">{getDashboardLabel()}</button></Link>
             <a href="#how-it-works"><button className="btn ghost hero-secondary">Learn More</button></a>
           </div>
         </div>

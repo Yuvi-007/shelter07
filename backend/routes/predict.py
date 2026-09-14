@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from db import get_db_connection
 from utils.auth_utils import token_required
 
@@ -61,6 +61,12 @@ def predict(shelter_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
+        if request.user["role"] == "manager":
+            cursor.execute("SELECT shelter_id FROM users WHERE id = %s", (request.user["id"],))
+            manager = cursor.fetchone()
+            if not manager or manager["shelter_id"] != shelter_id:
+                return jsonify({"error": "You can only view predictions for your assigned shelter"}), 403
+
         cursor.execute("SELECT * FROM shelters WHERE id = %s", (shelter_id,))
         shelter = cursor.fetchone()
         if not shelter:

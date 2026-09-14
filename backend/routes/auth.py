@@ -123,7 +123,7 @@ def login():
         cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
         user = cursor.fetchone()
 
-        if not user or not check_password_hash(user["password_hash"], password):
+        if not user or not check_password_hash(user["password_hash"], password) or not user["is_active"]:
             return jsonify({"error": "Invalid email or password."}), 401
 
         token = generate_token(user)
@@ -155,7 +155,13 @@ def get_current_user():
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
-            "SELECT id, name, email, role, shelter_id FROM users WHERE id = %s",
+            """
+            SELECT u.id, u.name, u.email, u.role, u.is_active, u.shelter_id,
+                   s.name AS assigned_shelter_name
+            FROM users u
+            LEFT JOIN shelters s ON s.id = u.shelter_id
+            WHERE u.id = %s
+            """,
             (request.user["id"],),
         )
         user = cursor.fetchone()

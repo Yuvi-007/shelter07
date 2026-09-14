@@ -74,7 +74,7 @@ def suggest_redistribution(shelter_id):
 
 @redistribute_bp.route("/redistribute/confirm", methods=["POST"])
 @token_required
-@roles_required("authority", "admin")
+@roles_required("user", "authority", "admin")
 def confirm_redistribution():
     data = request.get_json(silent=True) or {}
     from_shelter_id = data.get("from_shelter_id")
@@ -176,7 +176,7 @@ def confirm_redistribution():
 
 @redistribute_bp.route("/redistribute/log", methods=["GET"])
 @token_required
-@roles_required("authority", "admin")
+@roles_required("user", "admin")
 def get_redistribution_log():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)

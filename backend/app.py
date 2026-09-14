@@ -8,6 +8,8 @@ from routes.occupancy import occupancy_bp
 from routes.predict import predict_bp
 from routes.redistribute import redistribute_bp
 from routes.users import users_bp
+from routes.role_requests import role_requests_bp
+from routes.disasters import disasters_bp
 
 
 def create_app():
@@ -22,6 +24,8 @@ def create_app():
     app.register_blueprint(predict_bp)
     app.register_blueprint(redistribute_bp)
     app.register_blueprint(users_bp)
+    app.register_blueprint(role_requests_bp)
+    app.register_blueprint(disasters_bp)
 
     @app.route("/api/health", methods=["GET"])
     def health():

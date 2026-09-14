@@ -5,9 +5,46 @@ from utils.auth_utils import token_required, roles_required
 
 shelters_bp = Blueprint("shelters", __name__, url_prefix="/api/shelters")
 
+SHELTER_FIELDS = (
+    "name", "latitude", "longitude", "total_capacity", "current_occupancy",
+    "has_food", "has_water", "has_medical",
+)
+
+SHELTER_SELECT = """
+    SELECT s.*, (s.total_capacity - s.current_occupancy) AS available_capacity,
+           u.id AS manager_id, u.name AS manager_name, u.is_active AS manager_is_active
+    FROM shelters s
+    LEFT JOIN users u ON u.id = (
+        SELECT manager.id FROM users manager
+        WHERE manager.shelter_id = s.id AND manager.role = 'manager'
+        ORDER BY manager.id LIMIT 1
+    )
+"""
+
 
 def is_finite_number(value):
     return type(value) in (int, float) and isfinite(value)
+
+
+def validate_shelter_values(values):
+    if "name" in values:
+        if not isinstance(values["name"], str) or not values["name"].strip():
+            return "name is required"
+        values["name"] = values["name"].strip()
+        if len(values["name"]) > 150:
+            return "name must be at most 150 characters"
+    if "total_capacity" in values and (type(values["total_capacity"]) is not int or values["total_capacity"] <= 0):
+        return "total_capacity must be a positive integer"
+    if "current_occupancy" in values and (type(values["current_occupancy"]) is not int or values["current_occupancy"] < 0):
+        return "current_occupancy must be an integer greater than or equal to 0"
+    if "latitude" in values and (not is_finite_number(values["latitude"]) or not -90 <= values["latitude"] <= 90):
+        return "latitude must be between -90 and 90"
+    if "longitude" in values and (not is_finite_number(values["longitude"]) or not -180 <= values["longitude"] <= 180):
+        return "longitude must be between -180 and 180"
+    for field in ("has_food", "has_water", "has_medical"):
+        if field in values and type(values[field]) is not bool:
+            return f"{field} must be a boolean"
+    return None
 
 
 @shelters_bp.route("", methods=["GET"])
@@ -15,7 +52,15 @@ def list_shelters():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute("SELECT * FROM shelters ORDER BY name")
+        if request.user["role"] == "manager":
+            cursor.execute(
+                f"{SHELTER_SELECT} WHERE s.id = (SELECT shelter_id FROM users WHERE id = %s) ORDER BY s.name",
+                (request.user["id"],),
+            )
+            shelters = cursor.fetchall()
+            return jsonify(shelters)
+
+        cursor.execute(f"{SHELTER_SELECT} ORDER BY s.name")
         shelters = cursor.fetchall()
         return jsonify(shelters)
     finally:
@@ -28,7 +73,13 @@ def get_shelter(shelter_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute("SELECT * FROM shelters WHERE id = %s", (shelter_id,))
+        if request.user["role"] == "manager":
+            cursor.execute("SELECT shelter_id FROM users WHERE id = %s", (request.user["id"],))
+            manager = cursor.fetchone()
+            if not manager or manager["shelter_id"] != shelter_id:
+                return jsonify({"error": "You can only view your assigned shelter"}), 403
+
+        cursor.execute(f"{SHELTER_SELECT} WHERE s.id = %s", (shelter_id,))
         shelter = cursor.fetchone()
         if not shelter:
             return jsonify({"error": "Shelter not found"}), 404
@@ -48,21 +99,16 @@ def create_shelter():
     if missing:
         return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
 
-    total_capacity = data["total_capacity"]
-    current_occupancy = data.get("current_occupancy", 0)
-    latitude = data["latitude"]
-    longitude = data["longitude"]
-
-    if type(total_capacity) is not int or total_capacity <= 0:
-        return jsonify({"error": "total_capacity must be a positive integer"}), 400
-    if type(current_occupancy) is not int or current_occupancy < 0:
-        return jsonify({"error": "current_occupancy must be an integer greater than or equal to 0"}), 400
-    if current_occupancy > total_capacity:
+    values = {field: data[field] for field in SHELTER_FIELDS if field in data}
+    values.setdefault("current_occupancy", 0)
+    values.setdefault("has_food", True)
+    values.setdefault("has_water", True)
+    values.setdefault("has_medical", False)
+    validation_error = validate_shelter_values(values)
+    if validation_error:
+        return jsonify({"error": validation_error}), 400
+    if values["current_occupancy"] > values["total_capacity"]:
         return jsonify({"error": "current_occupancy cannot exceed total_capacity"}), 400
-    if not is_finite_number(latitude) or not -90 <= latitude <= 90:
-        return jsonify({"error": "latitude must be between -90 and 90"}), 400
-    if not is_finite_number(longitude) or not -180 <= longitude <= 180:
-        return jsonify({"error": "longitude must be between -180 and 180"}), 400
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -72,14 +118,12 @@ def create_shelter():
                (name, latitude, longitude, total_capacity, current_occupancy, has_food, has_water, has_medical)
                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
             (
-                data["name"], latitude, longitude, total_capacity, current_occupancy,
-                int(bool(data.get("has_food", True))),
-                int(bool(data.get("has_water", True))),
-                int(bool(data.get("has_medical", False))),
+                values["name"], values["latitude"], values["longitude"], values["total_capacity"], values["current_occupancy"],
+                int(values["has_food"]), int(values["has_water"]), int(values["has_medical"]),
             ),
         )
         conn.commit()
-        cursor.execute("SELECT * FROM shelters WHERE id = %s", (cursor.lastrowid,))
+        cursor.execute(f"{SHELTER_SELECT} WHERE s.id = %s", (cursor.lastrowid,))
         return jsonify(cursor.fetchone()), 201
     finally:
         cursor.close()
@@ -91,30 +135,13 @@ def create_shelter():
 @roles_required("admin")
 def update_shelter(shelter_id):
     data = request.get_json(silent=True) or {}
-    fields = [
-        "name", "latitude", "longitude", "total_capacity", "current_occupancy",
-        "has_food", "has_water", "has_medical",
-    ]
-    updates = {f: data[f] for f in fields if f in data}
+    updates = {field: data[field] for field in SHELTER_FIELDS if field in data}
     if not updates:
         return jsonify({"error": "No valid fields to update"}), 400
 
-    if "total_capacity" in updates and (
-        type(updates["total_capacity"]) is not int or updates["total_capacity"] <= 0
-    ):
-        return jsonify({"error": "total_capacity must be a positive integer"}), 400
-    if "current_occupancy" in updates and (
-        type(updates["current_occupancy"]) is not int or updates["current_occupancy"] < 0
-    ):
-        return jsonify({"error": "current_occupancy must be an integer greater than or equal to 0"}), 400
-    if "latitude" in updates and (
-        not is_finite_number(updates["latitude"]) or not -90 <= updates["latitude"] <= 90
-    ):
-        return jsonify({"error": "latitude must be between -90 and 90"}), 400
-    if "longitude" in updates and (
-        not is_finite_number(updates["longitude"]) or not -180 <= updates["longitude"] <= 180
-    ):
-        return jsonify({"error": "longitude must be between -180 and 180"}), 400
+    validation_error = validate_shelter_values(updates)
+    if validation_error:
+        return jsonify({"error": validation_error}), 400
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -143,7 +170,7 @@ def update_shelter(shelter_id):
                 "INSERT INTO occupancy_logs (shelter_id, occupancy_count) VALUES (%s, %s)",
                 (shelter_id, updates["current_occupancy"]),
             )
-        cursor.execute("SELECT * FROM shelters WHERE id = %s", (shelter_id,))
+        cursor.execute(f"{SHELTER_SELECT} WHERE s.id = %s", (shelter_id,))
         shelter = cursor.fetchone()
         conn.commit()
         return jsonify(shelter)
@@ -160,13 +187,79 @@ def update_shelter(shelter_id):
 @roles_required("admin")
 def delete_shelter(shelter_id):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
     try:
+        conn.start_transaction()
+        cursor.execute("SELECT id FROM shelters WHERE id = %s FOR UPDATE", (shelter_id,))
+        if not cursor.fetchone():
+            conn.rollback()
+            return jsonify({"error": "Shelter not found"}), 404
+
+        # The schema historically used CASCADE for these tables. Never permit
+        # an application deletion to erase occupancy or redistribution history.
+        cursor.execute("SELECT id FROM occupancy_logs WHERE shelter_id = %s LIMIT 1", (shelter_id,))
+        has_occupancy_history = cursor.fetchone()
+        cursor.execute(
+            "SELECT id FROM redistribution_log WHERE from_shelter_id = %s OR to_shelter_id = %s LIMIT 1",
+            (shelter_id, shelter_id),
+        )
+        if has_occupancy_history or cursor.fetchone():
+            conn.rollback()
+            return jsonify({"error": "This shelter cannot be deleted because historical records exist"}), 409
+
+        # Assignment is optional, so clear it explicitly before deletion.
+        cursor.execute("UPDATE users SET shelter_id = NULL WHERE shelter_id = %s", (shelter_id,))
         cursor.execute("DELETE FROM shelters WHERE id = %s", (shelter_id,))
         conn.commit()
-        if cursor.rowcount == 0:
-            return jsonify({"error": "Shelter not found"}), 404
         return jsonify({"message": "Shelter deleted"})
+    except Exception:
+        conn.rollback()
+        return jsonify({"error": "Unable to delete shelter"}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@shelters_bp.route("/<int:shelter_id>/manager", methods=["PATCH"])
+@token_required
+@roles_required("admin")
+def assign_manager(shelter_id):
+    data = request.get_json(silent=True) or {}
+    manager_id = data.get("manager_id")
+    if manager_id is not None and (type(manager_id) is not int or manager_id <= 0):
+        return jsonify({"error": "manager_id must be a positive integer or null"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        conn.start_transaction()
+        cursor.execute("SELECT id FROM shelters WHERE id = %s FOR UPDATE", (shelter_id,))
+        if not cursor.fetchone():
+            conn.rollback()
+            return jsonify({"error": "Shelter not found"}), 404
+
+        if manager_id is not None:
+            cursor.execute(
+                "SELECT id, name FROM users WHERE id = %s AND role = 'manager' AND is_active = 1 FOR UPDATE",
+                (manager_id,),
+            )
+            manager = cursor.fetchone()
+            if not manager:
+                conn.rollback()
+                return jsonify({"error": "Only active manager accounts can be assigned"}), 400
+
+        # A shelter has one visible manager. Clearing first also safely moves a
+        # manager from their prior shelter because users.shelter_id is singular.
+        cursor.execute("UPDATE users SET shelter_id = NULL WHERE shelter_id = %s AND role = 'manager'", (shelter_id,))
+        if manager_id is not None:
+            cursor.execute("UPDATE users SET shelter_id = %s WHERE id = %s", (shelter_id, manager_id))
+        cursor.execute(f"{SHELTER_SELECT} WHERE s.id = %s", (shelter_id,))
+        shelter = cursor.fetchone()
+        conn.commit()
+        return jsonify(shelter)
+    except Exception:
+        conn.rollback()
+        return jsonify({"error": "Unable to update manager assignment"}), 500
     finally:
         cursor.close()
         conn.close()

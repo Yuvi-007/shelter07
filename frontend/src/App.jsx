@@ -9,11 +9,15 @@ import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUsers from './pages/AdminUsers';
+import AdminShelters from './pages/AdminShelters';
+import AdminDisasters from './pages/AdminDisasters';
+import AdminRoleRequests from './pages/AdminRoleRequests';
+import Profile from './pages/Profile';
 import ManagerDashboard from './pages/ManagerDashboard';
+import ManagerHistory from './pages/ManagerHistory';
 import AuthorityDashboard from './pages/AuthorityDashboard';
 import ShelterDetail from './pages/ShelterDetail';
 import RedistributeAction from './pages/RedistributeAction';
-import CitizenRequestShelter from './pages/CitizenRequestShelter';
 
 export default function App() {
   return (
@@ -22,44 +26,41 @@ export default function App() {
         <div className="app-shell">
           <Navbar />
           <Routes>
-            {/* Public Pages */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/request-shelter" element={<CitizenRequestShelter />} />
 
-            {/* Citizen Dashboard */}
-            <Route path="/user" element={
-              <ProtectedRoute roles={['user', 'admin']}><CitizenRequestShelter /></ProtectedRoute>
-            } />
-
-            {/* Administrator Modules */}
             <Route path="/admin" element={
               <ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>
             } />
             <Route path="/admin/users" element={
               <ProtectedRoute roles={['admin']}><AdminUsers /></ProtectedRoute>
             } />
-
-            {/* Shelter Manager Module */}
+            <Route path="/admin/shelters" element={
+              <ProtectedRoute roles={['admin']}><AdminShelters /></ProtectedRoute>
+            } />
+            <Route path="/admin/disasters" element={
+              <ProtectedRoute roles={['admin']}><AdminDisasters /></ProtectedRoute>
+            } />
+            <Route path="/admin/role-requests" element={
+              <ProtectedRoute roles={['admin']}><AdminRoleRequests /></ProtectedRoute>
+            } />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/manager" element={
-              <ProtectedRoute roles={['manager', 'admin']}><ManagerDashboard /></ProtectedRoute>
+              <ProtectedRoute roles={['manager']}><ManagerDashboard /></ProtectedRoute>
             } />
-
-            {/* Disaster Authority Module */}
+            <Route path="/manager/history" element={
+              <ProtectedRoute roles={['manager']}><ManagerHistory /></ProtectedRoute>
+            } />
             <Route path="/authority" element={
-              <ProtectedRoute roles={['authority', 'admin']}><AuthorityDashboard /></ProtectedRoute>
+              <ProtectedRoute roles={['user', 'authority']}><AuthorityDashboard /></ProtectedRoute>
             } />
-
-            {/* Shelter Details (All authenticated users) */}
             <Route path="/shelters/:id" element={
               <ProtectedRoute><ShelterDetail /></ProtectedRoute>
             } />
-
-            {/* Shelter Redistribution Action (Authority and Admin only) */}
             <Route path="/shelters/:id/redistribute" element={
-              <ProtectedRoute roles={['authority', 'admin']}><RedistributeAction /></ProtectedRoute>
+              <ProtectedRoute roles={['user', 'admin']}><RedistributeAction /></ProtectedRoute>
             } />
           </Routes>
         </div>
