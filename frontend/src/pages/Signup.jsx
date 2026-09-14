@@ -59,6 +59,15 @@ export default function Signup() {
           <input id="email" type="email" value={form.email} onChange={update('email')} required />
         </div>
         <div className="field">
+          <label htmlFor="role">Account Role</label>
+          <select id="role" value={form.role} onChange={update('role')} className="select-input" style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', background: '#fff', fontSize: '14px', fontFamily: 'inherit' }}>
+            <option value="user">Citizen / General User</option>
+            <option value="authority">Disaster Response Authority</option>
+            <option value="manager">Shelter Facility Manager</option>
+            <option value="admin">System Administrator</option>
+          </select>
+        </div>
+        <div className="field">
           <label htmlFor="password">Password</label>
           <div className="password-field">
             <input id="password" type={showPassword ? 'text' : 'password'} value={form.password} onChange={update('password')} required minLength={6} />

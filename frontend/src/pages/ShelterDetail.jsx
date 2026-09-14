@@ -73,7 +73,7 @@ export default function ShelterDetail() {
             <p className="muted">{prediction?.note || 'Not enough data yet for a trend projection.'}</p>
           )}
 
-          {risk !== 'low' && ['admin', 'user'].includes(auth.user.role) && (
+          {risk !== 'low' && ['admin', 'authority', 'user'].includes(auth.user.role) && (
             <Link to={`/shelters/${id}/redistribute`}>
               <button className="btn accent" style={{ marginTop: 8 }}>View redistribution suggestions</button>
             </Link>

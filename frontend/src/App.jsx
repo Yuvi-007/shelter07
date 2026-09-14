@@ -39,13 +39,13 @@ export default function App() {
               <ProtectedRoute roles={['manager']}><ManagerDashboard /></ProtectedRoute>
             } />
             <Route path="/authority" element={
-              <ProtectedRoute roles={['user', 'admin']}><AuthorityDashboard /></ProtectedRoute>
+              <ProtectedRoute roles={['authority', 'admin', 'user']}><AuthorityDashboard /></ProtectedRoute>
             } />
             <Route path="/shelters/:id" element={
               <ProtectedRoute><ShelterDetail /></ProtectedRoute>
             } />
             <Route path="/shelters/:id/redistribute" element={
-              <ProtectedRoute roles={['user', 'admin']}><RedistributeAction /></ProtectedRoute>
+              <ProtectedRoute roles={['authority', 'admin', 'user']}><RedistributeAction /></ProtectedRoute>
             } />
           </Routes>
         </div>

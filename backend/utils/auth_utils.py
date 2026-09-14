@@ -39,6 +39,23 @@ def token_required(f):
     return wrapper
 
 
+def optional_token(f):
+    """Optionally decodes JWT if provided, but does not reject unauthenticated requests."""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header.split(" ", 1)[1]
+            try:
+                request.user = decode_token(token)
+            except Exception:
+                request.user = None
+        else:
+            request.user = None
+        return f(*args, **kwargs)
+    return wrapper
+
+
 def roles_required(*allowed_roles):
     """Stack under @token_required. Restricts an endpoint to specific roles."""
     def decorator(f):

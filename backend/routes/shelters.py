@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from math import isfinite
 from db import get_db_connection
-from utils.auth_utils import token_required, roles_required
+from utils.auth_utils import token_required, optional_token, roles_required
 
 shelters_bp = Blueprint("shelters", __name__, url_prefix="/api/shelters")
 
@@ -11,7 +11,7 @@ def is_finite_number(value):
 
 
 @shelters_bp.route("", methods=["GET"])
-@token_required
+@optional_token
 def list_shelters():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -25,7 +25,7 @@ def list_shelters():
 
 
 @shelters_bp.route("/<int:shelter_id>", methods=["GET"])
-@token_required
+@optional_token
 def get_shelter(shelter_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)

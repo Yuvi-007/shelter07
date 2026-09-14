@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify
 from db import get_db_connection
-from utils.auth_utils import token_required
+from utils.auth_utils import token_required, optional_token
 
 predict_bp = Blueprint("predict", __name__, url_prefix="/api/shelters")
 
@@ -56,7 +56,7 @@ def calculate_prediction(logs, total_capacity, current_occupancy):
 
 
 @predict_bp.route("/<int:shelter_id>/predict", methods=["GET"])
-@token_required
+@optional_token
 def predict(shelter_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)

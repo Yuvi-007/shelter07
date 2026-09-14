@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'manager', 'user') NOT NULL DEFAULT 'user',
+    role ENUM('admin', 'manager', 'user', 'authority') NOT NULL DEFAULT 'user',
     shelter_id INT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (shelter_id) REFERENCES shelters(id) ON DELETE SET NULL
