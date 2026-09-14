@@ -10,22 +10,25 @@ export default function RedistributeAction() {
   const navigate = useNavigate();
 
   const [data, setData] = useState(null);
+  const [sourceShelter, setSourceShelter] = useState(null);
   const [error, setError] = useState('');
-  const [confirmedId, setConfirmedId] = useState(null);
-  const [busyId, setBusyId] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [peopleCounts, setPeopleCounts] = useState({});
 
   const load = async () => {
     try {
-      const [result, sourceShelter] = await Promise.all([
+      const [result, source] = await Promise.all([
         api.redistribute(id, token),
         api.getShelter(id, token),
       ]);
       const defaultPeopleCount = Math.max(
-        Math.ceil(sourceShelter.current_occupancy - (sourceShelter.total_capacity * 0.8)),
+        Math.ceil(source.current_occupancy - (source.total_capacity * 0.8)),
         1,
       );
+      setError('');
       setData(result);
+      setSourceShelter(source);
       setPeopleCounts(Object.fromEntries(
         result.suggestions.map((suggestion) => [
           suggestion.shelter_id,
@@ -37,28 +40,40 @@ export default function RedistributeAction() {
     }
   };
 
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => {
+    setSuccess(null);
+    load();
+  }, [id]);
 
   const handleConfirm = async (toShelterId) => {
-    const peopleCount = Number(peopleCounts[toShelterId]);
-    if (!Number.isInteger(peopleCount) || peopleCount <= 0) {
+    if (isSubmitting) return;
+
+    const sourceShelterId = Number(id);
+    const enteredCount = peopleCounts[toShelterId];
+    const peopleCount = Number(enteredCount);
+    if (!Number.isInteger(sourceShelterId) || sourceShelterId <= 0 || sourceShelterId === toShelterId) {
+      setError('Source and destination shelters must be different.');
+      return;
+    }
+    if (enteredCount === '' || !Number.isInteger(peopleCount) || peopleCount <= 0) {
       setError('People count must be a positive integer.');
       return;
     }
 
-    setBusyId(toShelterId);
+    setIsSubmitting(true);
     setError('');
     try {
-      await api.confirmRedistribution({
-        from_shelter_id: parseInt(id, 10),
+      const result = await api.confirmRedistribution({
+        from_shelter_id: sourceShelterId,
         to_shelter_id: toShelterId,
         people_count: peopleCount,
       }, token);
-      setConfirmedId(toShelterId);
+      setSuccess(result);
+      await load();
     } catch (err) {
       setError(err.message);
     } finally {
-      setBusyId(null);
+      setIsSubmitting(false);
     }
   };
 
@@ -69,7 +84,22 @@ export default function RedistributeAction() {
         <p>Nearby shelters with room to spare for people arriving at this shelter.</p>
       </div>
 
-      {error && <p className="error-text">{error}</p>}
+      {error && <p className="error-text" role="alert">{error}</p>}
+      {success && (
+        <p className="success-text" role="status">
+          {success.message} {success.people_count} people transferred (record #{success.id}).
+        </p>
+      )}
+
+      {sourceShelter && (
+        <div className="card redistribution-source">
+          <h3>Source shelter</h3>
+          <strong>{sourceShelter.name}</strong>
+          <p className="muted">
+            Current occupancy: {sourceShelter.current_occupancy} of {sourceShelter.total_capacity}
+          </p>
+        </div>
+      )}
 
       {!data ? (
         <p className="muted">Loading…</p>
@@ -86,6 +116,9 @@ export default function RedistributeAction() {
                 <p className="muted" style={{ margin: '2px 0 0' }}>
                   {s.distance_km} km away · {s.free_capacity} of {s.total_capacity} spots free
                 </p>
+                <p className="muted" style={{ margin: '2px 0 0' }}>
+                  Current occupancy: {s.total_capacity - s.free_capacity} of {s.total_capacity}
+                </p>
               </div>
               <label className="field" style={{ margin: 0 }}>
                 <span className="muted">People</span>
@@ -98,15 +131,15 @@ export default function RedistributeAction() {
                     ...peopleCounts,
                     [s.shelter_id]: e.target.value,
                   })}
-                  disabled={busyId === s.shelter_id || confirmedId === s.shelter_id}
+                  disabled={isSubmitting}
                 />
               </label>
               <button
                 className="btn accent"
-                disabled={busyId === s.shelter_id || confirmedId === s.shelter_id}
+                disabled={isSubmitting}
                 onClick={() => handleConfirm(s.shelter_id)}
               >
-                {confirmedId === s.shelter_id ? 'Confirmed' : busyId === s.shelter_id ? 'Confirming…' : 'Confirm redirect'}
+                {isSubmitting ? 'Confirming…' : 'Confirm redirect'}
               </button>
             </div>
           ))}

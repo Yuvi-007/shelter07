@@ -5,6 +5,9 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Signup() {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'user' });
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -15,9 +18,13 @@ export default function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (form.password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
     setLoading(true);
     try {
-      const data = await api.signup(form);
+      const data = await api.signup({ ...form, confirm_password: confirmPassword });
       login(data);
       const dest = { admin: '/admin', manager: '/manager', user: '/authority' }[data.user.role] || '/';
       navigate(dest);
@@ -29,17 +36,15 @@ export default function Signup() {
   };
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1>Create an account</h1>
-        <p>
-          For this MVP demo, you can pick your role directly. In a real deployment, only an
-          admin would create manager and authority accounts.
-        </p>
-      </div>
-      <form className="card form-card" onSubmit={handleSubmit}>
+    <main className="auth-page">
+      <form className="card form-card auth-card" onSubmit={handleSubmit}>
+        <Link to="/" className="auth-brand">Shelter<span>X</span></Link>
+        <div className="auth-heading">
+          <h1>Create Account</h1>
+          <p>Join ShelterX to access emergency shelter services.</p>
+        </div>
         <div className="field">
-          <label htmlFor="name">Full name</label>
+          <label htmlFor="name">Name</label>
           <input id="name" value={form.name} onChange={update('name')} required />
         </div>
         <div className="field">
@@ -48,24 +53,38 @@ export default function Signup() {
         </div>
         <div className="field">
           <label htmlFor="password">Password</label>
-          <input id="password" type="password" value={form.password} onChange={update('password')} required minLength={6} />
+          <div className="password-field">
+            <input id="password" type={showPassword ? 'text' : 'password'} value={form.password} onChange={update('password')} required minLength={6} />
+            <button className="password-toggle" type="button" onClick={() => setShowPassword(!showPassword)}>
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
         </div>
         <div className="field">
-          <label htmlFor="role">Role</label>
-          <select id="role" value={form.role} onChange={update('role')}>
-            <option value="user">Authority (region-wide view)</option>
-            <option value="manager">Manager (single shelter)</option>
-            <option value="admin">Admin</option>
-          </select>
+          <label htmlFor="confirm-password">Confirm Password</label>
+          <div className="password-field">
+            <input
+              id="confirm-password"
+              type={showConfirmPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              minLength={6}
+            />
+            <button className="password-toggle" type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+              {showConfirmPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
         </div>
         {error && <p className="error-text">{error}</p>}
-        <button className="btn accent" type="submit" disabled={loading}>
-          {loading ? 'Creating account…' : 'Sign up'}
+        <button className="btn accent auth-submit" type="submit" disabled={loading}>
+          {loading ? 'Creating account…' : 'Create Account'}
         </button>
-        <p className="muted" style={{ marginTop: 16 }}>
-          Already have an account? <Link to="/login">Log in</Link>
+        <p className="muted auth-link-text">
+          Already have an account? <Link to="/login">Login</Link>
         </p>
+        <Link className="back-link" to="/">← Back to Home</Link>
       </form>
-    </div>
+    </main>
   );
 }

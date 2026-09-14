@@ -95,13 +95,18 @@ def confirm_redistribution():
     try:
         conn.start_transaction()
 
-        cursor.execute("SELECT id FROM shelters WHERE id = %s", (from_shelter_id,))
-        if not cursor.fetchone():
+        # Lock both shelters before checking their occupancy so concurrent
+        # confirmations cannot remove unavailable occupants or overbook capacity.
+        cursor.execute(
+            """SELECT id, current_occupancy
+               FROM shelters WHERE id = %s FOR UPDATE""",
+            (from_shelter_id,),
+        )
+        source = cursor.fetchone()
+        if not source:
             conn.rollback()
             return jsonify({"error": "Source shelter not found"}), 404
 
-        # Lock the destination row before calculating free capacity so concurrent
-        # confirmations cannot overbook the same shelter.
         cursor.execute(
             """SELECT id, total_capacity, current_occupancy
                FROM shelters WHERE id = %s FOR UPDATE""",
@@ -111,6 +116,15 @@ def confirm_redistribution():
         if not destination:
             conn.rollback()
             return jsonify({"error": "Destination shelter not found"}), 404
+
+        if source["current_occupancy"] < people_count:
+            conn.rollback()
+            return jsonify({
+                "error": (
+                    f"Source shelter has only {source['current_occupancy']} occupants; "
+                    f"cannot redirect {people_count} people"
+                )
+            }), 400
 
         free_capacity = destination["total_capacity"] - destination["current_occupancy"]
         if free_capacity < people_count:
@@ -123,8 +137,16 @@ def confirm_redistribution():
             }), 400
 
         cursor.execute(
+            "UPDATE shelters SET current_occupancy = current_occupancy - %s WHERE id = %s",
+            (people_count, from_shelter_id),
+        )
+        cursor.execute(
             "UPDATE shelters SET current_occupancy = current_occupancy + %s WHERE id = %s",
             (people_count, to_shelter_id),
+        )
+        cursor.execute(
+            "INSERT INTO occupancy_logs (shelter_id, occupancy_count) VALUES (%s, %s)",
+            (from_shelter_id, source["current_occupancy"] - people_count),
         )
         cursor.execute(
             "INSERT INTO occupancy_logs (shelter_id, occupancy_count) VALUES (%s, %s)",

@@ -18,16 +18,17 @@ export default function Navbar() {
     <nav className="navbar">
       <Link to="/" className="brand">Shelter<span>X</span></Link>
       <div className="nav-links">
+        <a href="/#how-it-works">How It Works</a>
         {auth ? (
           <>
-            <Link to={dashboardPath}>Dashboard</Link>
+            <Link to={dashboardPath}>Access Platform</Link>
             <span className="pill">{auth.user.name} · {auth.user.role}</span>
             <button onClick={handleLogout}>Log out</button>
           </>
         ) : (
           <>
             <Link to="/login">Log in</Link>
-            <Link to="/signup">Sign up</Link>
+            <Link to="/signup" className="nav-access">Access Platform</Link>
           </>
         )}
       </div>
