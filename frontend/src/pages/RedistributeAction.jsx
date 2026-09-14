@@ -146,9 +146,14 @@ export default function RedistributeAction() {
         </div>
       )}
 
-      <button className="btn ghost" style={{ marginTop: 20 }} onClick={() => navigate(`/shelters/${id}`)}>
-        Back to shelter detail
-      </button>
+      <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+        <button className="btn ghost" onClick={() => navigate('/authority')}>
+          ← Back to Authority Center
+        </button>
+        <button className="btn ghost" onClick={() => navigate(`/shelters/${id}`)}>
+          View Shelter Detail
+        </button>
+      </div>
     </div>
   );
 }

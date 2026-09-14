@@ -66,10 +66,9 @@ def signup():
         return jsonify({"error": "Passwords do not match."}), 400
 
     password_hash = generate_password_hash(password)
-    role = data.get("role", "user")
-    if role not in ("admin", "manager", "authority", "user"):
-        role = "user"
-    shelter_id = data.get("shelter_id")
+    # Public signup is strictly for citizens / standard users. Other roles are provisioned by admin.
+    role = "user"
+    shelter_id = None
     conn = None
     cursor = None
     try:

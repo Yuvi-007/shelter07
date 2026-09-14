@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { getRoleDashboardPath } from '../utils/rbac';
 
 function riskClass(level) {
   return { low: 'risk-low', medium: 'risk-medium', high: 'risk-high' }[level] || 'risk-low';
@@ -40,8 +41,16 @@ export default function ShelterDetail() {
   const ratio = shelter.total_capacity ? shelter.current_occupancy / shelter.total_capacity : 0;
   const risk = prediction?.risk_level || 'low';
 
+  const canRedistribute =
+    auth?.user?.role === 'admin' ||
+    auth?.user?.role === 'authority' ||
+    (auth?.user?.email || '').toLowerCase().startsWith('authority@');
+
+  const backUrl = getRoleDashboardPath(auth?.user);
+
   return (
     <div className="page">
+      <Link className="back-link" to={backUrl}>← Back to Dashboard</Link>
       <div className="page-header">
         <h1>{shelter.name}</h1>
         <p>{shelter.current_occupancy} of {shelter.total_capacity} capacity occupied</p>
@@ -73,7 +82,7 @@ export default function ShelterDetail() {
             <p className="muted">{prediction?.note || 'Not enough data yet for a trend projection.'}</p>
           )}
 
-          {risk !== 'low' && ['admin', 'authority', 'user'].includes(auth.user.role) && (
+          {risk !== 'low' && canRedistribute && (
             <Link to={`/shelters/${id}/redistribute`}>
               <button className="btn accent" style={{ marginTop: 8 }}>View redistribution suggestions</button>
             </Link>

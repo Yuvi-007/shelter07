@@ -22,30 +22,44 @@ export default function App() {
         <div className="app-shell">
           <Navbar />
           <Routes>
+            {/* Public Pages */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/request-shelter" element={<CitizenRequestShelter />} />
-            <Route path="/user" element={<CitizenRequestShelter />} />
 
+            {/* Citizen Dashboard */}
+            <Route path="/user" element={
+              <ProtectedRoute roles={['user', 'admin']}><CitizenRequestShelter /></ProtectedRoute>
+            } />
+
+            {/* Administrator Modules */}
             <Route path="/admin" element={
               <ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>
             } />
             <Route path="/admin/users" element={
               <ProtectedRoute roles={['admin']}><AdminUsers /></ProtectedRoute>
             } />
+
+            {/* Shelter Manager Module */}
             <Route path="/manager" element={
-              <ProtectedRoute roles={['manager']}><ManagerDashboard /></ProtectedRoute>
+              <ProtectedRoute roles={['manager', 'admin']}><ManagerDashboard /></ProtectedRoute>
             } />
+
+            {/* Disaster Authority Module */}
             <Route path="/authority" element={
-              <ProtectedRoute roles={['authority', 'admin', 'user']}><AuthorityDashboard /></ProtectedRoute>
+              <ProtectedRoute roles={['authority', 'admin']}><AuthorityDashboard /></ProtectedRoute>
             } />
+
+            {/* Shelter Details (All authenticated users) */}
             <Route path="/shelters/:id" element={
               <ProtectedRoute><ShelterDetail /></ProtectedRoute>
             } />
+
+            {/* Shelter Redistribution Action (Authority and Admin only) */}
             <Route path="/shelters/:id/redistribute" element={
-              <ProtectedRoute roles={['authority', 'admin', 'user']}><RedistributeAction /></ProtectedRoute>
+              <ProtectedRoute roles={['authority', 'admin']}><RedistributeAction /></ProtectedRoute>
             } />
           </Routes>
         </div>

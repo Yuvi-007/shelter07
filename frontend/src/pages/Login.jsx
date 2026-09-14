@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { getRoleDashboardPath } from '../utils/rbac';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -9,8 +10,15 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { auth, login } = useAuth();
   const navigate = useNavigate();
+
+  // If already logged in, redirect directly to active role dashboard
+  useEffect(() => {
+    if (auth?.user) {
+      navigate(getRoleDashboardPath(auth.user), { replace: true });
+    }
+  }, [auth, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,15 +27,8 @@ export default function Login() {
     try {
       const data = await api.login({ email, password });
       login(data);
-      const dest =
-        data.user.role === 'admin'
-          ? '/admin'
-          : data.user.role === 'manager'
-          ? '/manager'
-          : data.user.role === 'authority' || data.user.email?.toLowerCase().startsWith('authority@')
-          ? '/authority'
-          : '/user';
-      navigate(dest);
+      const dest = getRoleDashboardPath(data.user);
+      navigate(dest, { replace: true });
     } catch (err) {
       setError(err.message || 'Login failed');
     } finally {
@@ -51,6 +52,7 @@ export default function Login() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            placeholder="you@example.com"
           />
         </div>
         <div className="field">
@@ -62,6 +64,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              placeholder="••••••••"
             />
             <button
               className="password-toggle"
