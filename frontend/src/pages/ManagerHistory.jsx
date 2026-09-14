@@ -27,31 +27,21 @@ export default function ManagerHistory() {
   const [shelterId, setShelterId] = useState(null);
   const [shelterName, setShelterName] = useState('');
   const [shelterCapacity, setShelterCapacity] = useState(null);
+  const [allShelters, setAllShelters] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
 
-  const loadHistory = useCallback(async (isManual = false) => {
+  const loadHistoryForShelter = useCallback(async (targetShelterId, isManual = false) => {
     if (isManual) setRefreshing(true);
     else setLoading(true);
     setError('');
 
     try {
-      const currentUser = await api.getMe(token);
-      if (!currentUser?.shelter_id) {
-        setShelterId(null);
-        setLoading(false);
-        setRefreshing(false);
-        return;
-      }
-
-      setShelterId(currentUser.shelter_id);
-      setShelterName(currentUser.assigned_shelter_name || `Shelter #${currentUser.shelter_id}`);
-
       const [logsData, shelterData] = await Promise.all([
-        api.getOccupancyLogs(currentUser.shelter_id, token),
-        api.getShelter(currentUser.shelter_id, token).catch(() => null),
+        api.getOccupancyLogs(targetShelterId, token).catch(() => []),
+        api.getShelter(targetShelterId, token).catch(() => null),
       ]);
 
       if (shelterData) {
@@ -68,11 +58,52 @@ export default function ManagerHistory() {
     }
   }, [token]);
 
+  const loadHistory = useCallback(async (isManual = false) => {
+    if (isManual) setRefreshing(true);
+    else setLoading(true);
+    setError('');
+
+    try {
+      const [currentUser, sheltersList] = await Promise.all([
+        api.getMe(token),
+        api.getShelters(token).catch(() => []),
+      ]);
+
+      const validShelters = Array.isArray(sheltersList) ? sheltersList : [];
+      setAllShelters(validShelters);
+
+      let targetId = currentUser?.shelter_id;
+      if (!targetId && validShelters.length > 0) {
+        targetId = validShelters[0].id;
+      }
+
+      if (!targetId) {
+        setShelterId(null);
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+
+      setShelterId(targetId);
+      await loadHistoryForShelter(targetId, isManual);
+    } catch (err) {
+      setError(err.message || 'Unable to load occupancy history.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [token, loadHistoryForShelter]);
+
+  const handleSwitchShelter = async (targetId) => {
+    setShelterId(targetId);
+    await loadHistoryForShelter(targetId);
+  };
+
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
 
-  // If unassigned manager
+  // If unassigned manager and no shelters available
   if (!loading && !shelterId) {
     return (
       <main className="page manager-history-page">
@@ -88,9 +119,9 @@ export default function ManagerHistory() {
               <BuildingIcon size={24} />
             </div>
             <h3>No shelter assigned</h3>
-            <p>You have not been assigned to a shelter facility yet. An administrator must assign a shelter to your account before you can inspect occupancy history.</p>
-            <Link to="/profile" className="btn accent" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-              View Account Profile
+            <p>You have not been assigned to a shelter facility yet. Please select a facility on your Manager Dashboard first.</p>
+            <Link to="/manager" className="btn accent" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              Go to Manager Dashboard
             </Link>
           </div>
         </section>
@@ -112,14 +143,30 @@ export default function ManagerHistory() {
               <ArrowLeftIcon size={14} /> Back to Dashboard
             </Link>
           </div>
-          <p className="section-eyebrow">AUDIT & LOGS</p>
+          <p className="section-eyebrow">AUDIT &amp; LOGS</p>
           <h1 className="admin-welcome">Occupancy History</h1>
           <p className="admin-welcome-sub">
             Chronological audit trail of occupancy records for <strong>{shelterName || `Shelter #${shelterId}`}</strong>
           </p>
         </div>
 
-        <div className="manager-header-actions">
+        <div className="manager-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          {allShelters.length > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff', border: '1px solid var(--line)', padding: '5px 12px', borderRadius: '8px' }}>
+              <span className="muted" style={{ fontSize: '12px', fontWeight: 600 }}>Facility:</span>
+              <select
+                value={shelterId || ''}
+                onChange={(e) => handleSwitchShelter(Number(e.target.value))}
+                style={{ border: 'none', background: 'transparent', font: 'inherit', fontSize: '13px', fontWeight: 500, color: 'var(--navy)', cursor: 'pointer', outline: 'none' }}
+              >
+                {allShelters.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} (#{s.id})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <button
             className="sys-refresh-btn"
             type="button"

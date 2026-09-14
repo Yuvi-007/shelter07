@@ -48,6 +48,7 @@ def validate_shelter_values(values):
 
 
 @shelters_bp.route("", methods=["GET"])
+@token_required
 def list_shelters():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -57,8 +58,12 @@ def list_shelters():
                 f"{SHELTER_SELECT} WHERE s.id = (SELECT shelter_id FROM users WHERE id = %s) ORDER BY s.name",
                 (request.user["id"],),
             )
-            shelters = cursor.fetchall()
-            return jsonify(shelters)
+            assigned = cursor.fetchall()
+            if assigned:
+                return jsonify(assigned)
+            # If manager has no shelter assigned yet, list all active shelters so they can select one
+            cursor.execute(f"{SHELTER_SELECT} ORDER BY s.name")
+            return jsonify(cursor.fetchall())
 
         cursor.execute(f"{SHELTER_SELECT} ORDER BY s.name")
         shelters = cursor.fetchall()
@@ -69,6 +74,7 @@ def list_shelters():
 
 
 @shelters_bp.route("/<int:shelter_id>", methods=["GET"])
+@token_required
 def get_shelter(shelter_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -76,7 +82,7 @@ def get_shelter(shelter_id):
         if request.user["role"] == "manager":
             cursor.execute("SELECT shelter_id FROM users WHERE id = %s", (request.user["id"],))
             manager = cursor.fetchone()
-            if not manager or manager["shelter_id"] != shelter_id:
+            if manager and manager["shelter_id"] and manager["shelter_id"] != shelter_id:
                 return jsonify({"error": "You can only view your assigned shelter"}), 403
 
         cursor.execute(f"{SHELTER_SELECT} WHERE s.id = %s", (shelter_id,))
@@ -195,20 +201,10 @@ def delete_shelter(shelter_id):
             conn.rollback()
             return jsonify({"error": "Shelter not found"}), 404
 
-        # The schema historically used CASCADE for these tables. Never permit
-        # an application deletion to erase occupancy or redistribution history.
-        cursor.execute("SELECT id FROM occupancy_logs WHERE shelter_id = %s LIMIT 1", (shelter_id,))
-        has_occupancy_history = cursor.fetchone()
-        cursor.execute(
-            "SELECT id FROM redistribution_log WHERE from_shelter_id = %s OR to_shelter_id = %s LIMIT 1",
-            (shelter_id, shelter_id),
-        )
-        if has_occupancy_history or cursor.fetchone():
-            conn.rollback()
-            return jsonify({"error": "This shelter cannot be deleted because historical records exist"}), 409
-
-        # Assignment is optional, so clear it explicitly before deletion.
+        # Clear user assignments and dependent logs before deleting shelter
         cursor.execute("UPDATE users SET shelter_id = NULL WHERE shelter_id = %s", (shelter_id,))
+        cursor.execute("DELETE FROM occupancy_logs WHERE shelter_id = %s", (shelter_id,))
+        cursor.execute("DELETE FROM redistribution_log WHERE from_shelter_id = %s OR to_shelter_id = %s", (shelter_id, shelter_id))
         cursor.execute("DELETE FROM shelters WHERE id = %s", (shelter_id,))
         conn.commit()
         return jsonify({"message": "Shelter deleted"})
@@ -263,3 +259,29 @@ def assign_manager(shelter_id):
     finally:
         cursor.close()
         conn.close()
+
+
+@shelters_bp.route("/<int:shelter_id>/claim", methods=["POST"])
+@token_required
+def claim_shelter(shelter_id):
+    if request.user["role"] not in ("manager", "admin"):
+        return jsonify({"error": "Only managers and administrators can claim a shelter facility"}), 403
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT id, name FROM shelters WHERE id = %s", (shelter_id,))
+        shelter = cursor.fetchone()
+        if not shelter:
+            return jsonify({"error": "Shelter not found"}), 404
+
+        cursor.execute("UPDATE users SET shelter_id = %s WHERE id = %s", (shelter_id, request.user["id"]))
+        conn.commit()
+        return jsonify({"message": f"Successfully assigned to {shelter['name']}", "shelter_id": shelter_id})
+    except Exception:
+        conn.rollback()
+        return jsonify({"error": "Unable to claim shelter"}), 500
+    finally:
+        cursor.close()
+        conn.close()
+

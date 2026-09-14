@@ -126,14 +126,35 @@ def review_role_request(request_id, new_status):
             return jsonify({"error": "Only pending role requests can be reviewed"}), 400
 
         if new_status == "approved":
-            cursor.execute("SELECT id FROM users WHERE id = %s FOR UPDATE", (role_request["user_id"],))
-            if not cursor.fetchone():
+            cursor.execute("SELECT id, shelter_id FROM users WHERE id = %s FOR UPDATE", (role_request["user_id"],))
+            target_user = cursor.fetchone()
+            if not target_user:
                 conn.rollback()
                 return jsonify({"error": "Requesting user not found"}), 404
-            cursor.execute(
-                "UPDATE users SET role = %s WHERE id = %s",
-                (role_request["requested_role"], role_request["user_id"]),
-            )
+
+            if role_request["requested_role"] == "manager" and not target_user["shelter_id"]:
+                cursor.execute("""
+                    SELECT s.id FROM shelters s
+                    LEFT JOIN users u ON u.shelter_id = s.id AND u.role = 'manager'
+                    WHERE u.id IS NULL
+                    ORDER BY s.id ASC LIMIT 1
+                """)
+                avail = cursor.fetchone()
+                chosen_shelter_id = avail["id"] if avail else None
+                if not chosen_shelter_id:
+                    cursor.execute("SELECT id FROM shelters ORDER BY id ASC LIMIT 1")
+                    fallback_s = cursor.fetchone()
+                    chosen_shelter_id = fallback_s["id"] if fallback_s else None
+
+                cursor.execute(
+                    "UPDATE users SET role = %s, shelter_id = %s WHERE id = %s",
+                    (role_request["requested_role"], chosen_shelter_id, role_request["user_id"]),
+                )
+            else:
+                cursor.execute(
+                    "UPDATE users SET role = %s WHERE id = %s",
+                    (role_request["requested_role"], role_request["user_id"]),
+                )
 
         cursor.execute(
             """UPDATE role_requests

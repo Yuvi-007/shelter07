@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getRoleDashboardPath } from '../utils/rbac';
 
 export default function Home() {
   const { auth } = useAuth();
@@ -7,16 +8,15 @@ export default function Home() {
 
   const getDashboardDestination = () => {
     if (!user) return '/signup';
-    if (user.role === 'admin') return '/admin';
-    if (user.role === 'manager') return '/manager';
-    return '/authority';
+    return getRoleDashboardPath(user);
   };
 
   const getDashboardLabel = () => {
     if (!user) return 'Access Platform';
     if (user.role === 'admin') return 'Open Admin Dashboard';
     if (user.role === 'manager') return 'Open My Shelter';
-    return 'Open Region Overview';
+    if (user.role === 'authority') return 'Open Region Overview';
+    return 'Find & Request Shelter';
   };
 
   return (

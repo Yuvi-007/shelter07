@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { getRoleDashboardPath } from '../utils/rbac';
 
 export default function Signup() {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'user' });
@@ -26,7 +27,7 @@ export default function Signup() {
     try {
       const data = await api.signup({ ...form, confirm_password: confirmPassword });
       login(data);
-      const dest = { admin: '/admin', manager: '/manager', authority: '/authority', user: '/authority' }[data.user.role] || '/';
+      const dest = getRoleDashboardPath(data.user);
       navigate(dest);
     } catch (err) {
       setError(err.message);

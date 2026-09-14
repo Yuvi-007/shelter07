@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { getRoleDashboardPath } from '../utils/rbac';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -19,7 +20,7 @@ export default function Login() {
     try {
       const data = await api.login({ email, password });
       login(data);
-      const dest = { admin: '/admin', manager: '/manager', authority: '/authority', user: '/authority' }[data.user.role] || '/';
+      const dest = getRoleDashboardPath(data.user);
       navigate(dest);
     } catch (err) {
       setError(err.message);

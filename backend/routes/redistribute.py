@@ -58,6 +58,10 @@ def suggest_redistribution(shelter_id):
                 "distance_km": round(distance_km, 2),
                 "free_capacity": free_capacity,
                 "total_capacity": shelter["total_capacity"],
+                "current_occupancy": shelter["current_occupancy"],
+                "has_food": bool(shelter.get("has_food", 1)),
+                "has_water": bool(shelter.get("has_water", 1)),
+                "has_medical": bool(shelter.get("has_medical", 0)),
             })
 
         candidates.sort(key=lambda c: (c["distance_km"], -c["free_capacity"]))

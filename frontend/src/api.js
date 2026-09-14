@@ -30,6 +30,7 @@ export const api = {
   deleteShelter: (id, token) => request(`/shelters/${id}`, { method: 'DELETE', token }),
   assignShelterManager: (id, manager_id, token) =>
     request(`/shelters/${id}/manager`, { method: 'PATCH', body: { manager_id }, token }),
+  claimShelter: (id, token) => request(`/shelters/${id}/claim`, { method: 'POST', token }),
 
   getDisasters: (token) => request('/disasters', { token }),
   getDisaster: (id, token) => request(`/disasters/${id}`, { token }),

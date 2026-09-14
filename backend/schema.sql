@@ -72,13 +72,3 @@ CREATE TABLE IF NOT EXISTS redistribution_log (
     FOREIGN KEY (to_shelter_id) REFERENCES shelters(id) ON DELETE CASCADE,
     FOREIGN KEY (confirmed_by) REFERENCES users(id) ON DELETE CASCADE
 );
-
--- Seed data
-INSERT INTO shelters (name, latitude, longitude, total_capacity, current_occupancy, has_food, has_water, has_medical)
-VALUES
-('Community Hall A', 19.0760, 72.8777, 200, 150, 1, 1, 0),
-('Government School B', 19.0896, 72.8656, 150, 40, 1, 1, 1),
-('Sports Complex C', 19.0410, 72.8525, 300, 280, 1, 0, 0);
-
--- No default users are seeded. Create your first admin account via
--- POST /api/auth/signup with "role": "admin" after starting the backend.

@@ -114,9 +114,15 @@ export default function Navbar() {
                   </div>
                 )}
 
-                {(user?.role === 'authority' || user?.role === 'user') && (
+                {(user?.role === 'authority' || user?.email?.toLowerCase().startsWith('authority@')) && (
                   <Link to="/authority" role="menuitem" onClick={closeMenu}>
                     Region Overview
+                  </Link>
+                )}
+
+                {user?.role === 'user' && (
+                  <Link to="/user" role="menuitem" onClick={closeMenu}>
+                    Find & Request Shelter
                   </Link>
                 )}
 
