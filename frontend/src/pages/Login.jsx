@@ -22,7 +22,7 @@ export default function Login() {
       const dest = { admin: '/admin', manager: '/manager', user: '/authority' }[data.user.role] || '/';
       navigate(dest);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -38,13 +38,29 @@ export default function Login() {
         </div>
         <div className="field">
           <label htmlFor="email">Email</label>
-          <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </div>
         <div className="field">
           <label htmlFor="password">Password</label>
           <div className="password-field">
-            <input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required />
-            <button className="password-toggle" type="button" onClick={() => setShowPassword(!showPassword)}>
+            <input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <button
+              className="password-toggle"
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+            >
               {showPassword ? 'Hide' : 'Show'}
             </button>
           </div>
@@ -52,7 +68,7 @@ export default function Login() {
         </div>
         {error && <p className="error-text">{error}</p>}
         <button className="btn accent auth-submit" type="submit" disabled={loading}>
-          {loading ? 'Logging in…' : 'Log in'}
+          {loading ? 'Logging in…' : 'Log In'}
         </button>
         <p className="muted auth-link-text">
           Don't have an account? <Link to="/signup">Sign Up</Link>

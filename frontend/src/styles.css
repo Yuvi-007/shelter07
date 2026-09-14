@@ -373,3 +373,360 @@ button.btn.ghost.hero-secondary { color: #fff; border-color: #cfd6e4; background
   .home-footer { align-items: center; flex-direction: column; gap: 2px; text-align: center; padding: 22px 18px; }
   .auth-card { padding: 24px 20px; }
 }
+
+/* ==========================================================================
+   Authority Page Theme (Matching Clean Editorial Minimalist Homepage Design)
+   ========================================================================== */
+
+.authority-view {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 48px 40px 72px;
+  width: 100%;
+}
+
+.authority-hero-header {
+  margin-bottom: 32px;
+}
+
+.authority-hero-header .section-eyebrow {
+  margin-bottom: 8px;
+}
+
+.authority-hero-header h1 {
+  font-size: 32px;
+  line-height: 1.2;
+  margin: 0 0 10px;
+  color: var(--navy);
+}
+
+.authority-hero-header p {
+  color: var(--slate);
+  font-size: 16px;
+  margin: 0;
+  max-width: 65ch;
+}
+
+/* Minimalist Horizontal Tab Navigation */
+.authority-tab-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 36px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.authority-tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--slate);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.authority-tab-btn:hover {
+  background: #ebeae5;
+  color: var(--navy);
+}
+
+.authority-tab-btn.active {
+  background: var(--navy);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.authority-tab-badge {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #334155;
+  font-weight: 600;
+}
+
+.authority-tab-btn.active .authority-tab-badge {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.authority-refresh-btn {
+  margin-left: auto;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  color: var(--navy);
+  font-weight: 500;
+}
+
+.authority-refresh-btn:hover {
+  background: #ebeae5;
+}
+
+/* 4 Capability Cards (Matches the Screenshot Exactly) */
+.authority-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.authority-capability-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 150px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.authority-capability-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(22, 35, 58, 0.05);
+}
+
+.authority-capability-card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 6px;
+  color: var(--navy);
+}
+
+.authority-capability-card .card-metric {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--navy);
+  font-family: 'Space Grotesk', sans-serif;
+  margin-bottom: 4px;
+}
+
+.authority-capability-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* Authority Workflow Strip (Matches Screenshot 1. MONITOR -> 2. ANALYZE -> 3. RESPOND) */
+.authority-workflow-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.authority-workflow-step {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px 20px;
+  text-align: left;
+}
+
+.authority-workflow-step span {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.authority-workflow-step p {
+  margin: 8px 0 0;
+  color: var(--slate);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.authority-workflow-arrow {
+  color: var(--accent);
+  font-size: 22px;
+  font-weight: bold;
+}
+
+/* Content Panel */
+.authority-panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.authority-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.authority-panel-header h2,
+.authority-panel-header h3 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+
+.authority-panel-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Minimalist Table */
+.authority-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.authority-simple-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.authority-simple-table th {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.authority-simple-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.authority-simple-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Minimal Search and Filter */
+.authority-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.authority-search-input {
+  padding: 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  min-width: 240px;
+  background: #ffffff;
+}
+
+.authority-search-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.authority-filter-pill {
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--slate);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.authority-filter-pill:hover {
+  background: #f0f2f5;
+  color: var(--navy);
+}
+
+.authority-filter-pill.active {
+  background: var(--navy);
+  color: #ffffff;
+  border-color: var(--navy);
+}
+
+/* Alert Box */
+.authority-urgent-banner {
+  background: #fdf5f3;
+  border: 1px solid #f6cfc7;
+  border-left: 4px solid #c9503f;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.authority-urgent-banner strong {
+  color: #a3311f;
+  display: block;
+  margin-bottom: 3px;
+  font-size: 14px;
+}
+
+.authority-urgent-banner p {
+  margin: 0;
+  font-size: 13px;
+  color: #552720;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .authority-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .authority-workflow-strip {
+    flex-direction: column;
+  }
+  .authority-workflow-arrow {
+    transform: rotate(90deg);
+  }
+  .authority-view {
+    padding: 32px 20px 56px;
+  }
+}
+
+@media (max-width: 600px) {
+  .authority-grid-4 {
+    grid-template-columns: 1fr;
+  }
+  .authority-hero-header h1 {
+    font-size: 26px;
+  }
+  .authority-tab-nav {
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .authority-tab-btn {
+    white-space: nowrap;
+  }
+}

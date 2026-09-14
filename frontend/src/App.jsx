@@ -36,7 +36,7 @@ export default function App() {
               <ProtectedRoute roles={['manager']}><ManagerDashboard /></ProtectedRoute>
             } />
             <Route path="/authority" element={
-              <ProtectedRoute roles={['user']}><AuthorityDashboard /></ProtectedRoute>
+              <ProtectedRoute roles={['user', 'admin']}><AuthorityDashboard /></ProtectedRoute>
             } />
             <Route path="/shelters/:id" element={
               <ProtectedRoute><ShelterDetail /></ProtectedRoute>

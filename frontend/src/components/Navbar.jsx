@@ -21,13 +21,18 @@ export default function Navbar() {
         <a href="/#how-it-works">How It Works</a>
         {auth ? (
           <>
-            <Link to={dashboardPath}>Access Platform</Link>
-            <span className="pill">{auth.user.name} · {auth.user.role}</span>
+            <Link to={dashboardPath}>Dashboard</Link>
+            {auth.user.role === 'admin' && (
+              <Link to="/authority" style={{ color: '#e2986b' }}>Authority View</Link>
+            )}
+            <span className="pill">
+              {auth.user.name} · {auth.user.role === 'user' ? 'Authority' : auth.user.role}
+            </span>
             <button onClick={handleLogout}>Log out</button>
           </>
         ) : (
           <>
-            <Link to="/login">Log in</Link>
+            <Link to="/login">Log In</Link>
             <Link to="/signup" className="nav-access">Access Platform</Link>
           </>
         )}
