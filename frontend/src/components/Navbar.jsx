@@ -18,6 +18,7 @@ export default function Navbar() {
     <nav className="navbar">
       <Link to="/" className="brand">Shelter<span>X</span></Link>
       <div className="nav-links">
+        <Link to="/request-shelter">Request Shelter</Link>
         <a href="/#how-it-works">How It Works</a>
         {auth ? (
           <>

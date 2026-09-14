@@ -726,3 +726,202 @@ button.btn.ghost.hero-secondary { color: #fff; border-color: #cfd6e4; background
     white-space: nowrap;
   }
 }
+
+/* ==========================================================================
+   Citizen Request Shelter Portal Styles (Matching Editorial Theme)
+   ========================================================================== */
+
+.citizen-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.requirements-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 24px;
+}
+
+.requirements-card h3 {
+  font-size: 18px;
+  margin: 0 0 16px;
+  color: var(--navy);
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0 20px;
+}
+
+.custom-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--slate);
+  cursor: pointer;
+  user-select: none;
+}
+
+.custom-checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.recommendations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.recommendations-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--navy);
+}
+
+.sort-select {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  font-size: 13px;
+  background: var(--card);
+  color: var(--slate);
+  cursor: pointer;
+}
+
+.shelter-match-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.shelter-match-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.shelter-match-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(22, 35, 58, 0.05);
+}
+
+.shelter-match-info {
+  flex: 1;
+  min-width: 240px;
+}
+
+.shelter-match-info h4 {
+  font-size: 17px;
+  margin: 0 0 6px;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shelter-match-meta {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.match-chip {
+  display: inline-block;
+  background: #eaf6ee;
+  color: #1a7a44;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid #c2e5cf;
+}
+
+.request-submit-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(22, 35, 58, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 100;
+  backdrop-filter: blur(2px);
+}
+
+.request-modal-content {
+  background: var(--card);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  padding: 28px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.request-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.request-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--navy);
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.request-confirmed-box {
+  background: #f0f8f4;
+  border: 1px solid #c4e4d1;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.request-confirmed-box strong {
+  color: #1a7a44;
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.request-confirmed-box p {
+  margin: 0;
+  font-size: 13px;
+  color: #2b573d;
+}
+
+@media (max-width: 900px) {
+  .citizen-layout {
+    grid-template-columns: 1fr;
+  }
+}
+

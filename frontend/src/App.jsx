@@ -13,6 +13,7 @@ import ManagerDashboard from './pages/ManagerDashboard';
 import AuthorityDashboard from './pages/AuthorityDashboard';
 import ShelterDetail from './pages/ShelterDetail';
 import RedistributeAction from './pages/RedistributeAction';
+import CitizenRequestShelter from './pages/CitizenRequestShelter';
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/request-shelter" element={<CitizenRequestShelter />} />
 
             <Route path="/admin" element={
               <ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>

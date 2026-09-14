@@ -25,8 +25,7 @@ export default function AuthorityDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Requests state
-  const [requests, setRequests] = useState([
+  const defaultRequests = [
     {
       id: 'REQ-101',
       team: 'West Sector Rescue Unit',
@@ -60,7 +59,24 @@ export default function AuthorityDashboard() {
       assignedShelter: 'Government School B',
       time: '1 hour ago',
     },
-  ]);
+  ];
+
+  // Requests state (connected to citizen submissions queue)
+  const [requests, setRequests] = useState(() => {
+    try {
+      const saved = localStorage.getItem('shelterx_requests');
+      return saved ? JSON.parse(saved) : defaultRequests;
+    } catch {
+      return defaultRequests;
+    }
+  });
+
+  const saveRequests = (updated) => {
+    setRequests(updated);
+    try {
+      localStorage.setItem('shelterx_requests', JSON.stringify(updated));
+    } catch {}
+  };
 
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [newRequest, setNewRequest] = useState({
@@ -141,17 +157,42 @@ export default function AuthorityDashboard() {
 
   // Request actions
   const handleApprove = (id) => {
-    setRequests(requests.map((r) => (r.id === id ? { ...r, status: 'Approved' } : r)));
+    const updated = requests.map((r) => (r.id === id ? { ...r, status: 'Approved' } : r));
+    saveRequests(updated);
+    try {
+      const citizenLast = JSON.parse(localStorage.getItem('shelterx_citizen_last_request') || 'null');
+      if (citizenLast && citizenLast.id === id) {
+        citizenLast.status = 'Approved';
+        localStorage.setItem('shelterx_citizen_last_request', JSON.stringify(citizenLast));
+      }
+    } catch {}
   };
 
   const handleReject = (id) => {
-    setRequests(requests.map((r) => (r.id === id ? { ...r, status: 'Rejected' } : r)));
+    const updated = requests.map((r) => (r.id === id ? { ...r, status: 'Rejected' } : r));
+    saveRequests(updated);
+    try {
+      const citizenLast = JSON.parse(localStorage.getItem('shelterx_citizen_last_request') || 'null');
+      if (citizenLast && citizenLast.id === id) {
+        citizenLast.status = 'Rejected';
+        localStorage.setItem('shelterx_citizen_last_request', JSON.stringify(citizenLast));
+      }
+    } catch {}
   };
 
   const handleAssign = (id, shelterName) => {
-    setRequests(
-      requests.map((r) => (r.id === id ? { ...r, status: 'Assigned', assignedShelter: shelterName } : r))
+    const updated = requests.map((r) =>
+      r.id === id ? { ...r, status: 'Assigned', assignedShelter: shelterName } : r
     );
+    saveRequests(updated);
+    try {
+      const citizenLast = JSON.parse(localStorage.getItem('shelterx_citizen_last_request') || 'null');
+      if (citizenLast && citizenLast.id === id) {
+        citizenLast.status = 'Assigned';
+        citizenLast.assignedShelter = shelterName;
+        localStorage.setItem('shelterx_citizen_last_request', JSON.stringify(citizenLast));
+      }
+    } catch {}
   };
 
   const handleCreateRequest = (e) => {
@@ -168,7 +209,7 @@ export default function AuthorityDashboard() {
       assignedShelter: null,
       time: 'Just now',
     };
-    setRequests([item, ...requests]);
+    saveRequests([item, ...requests]);
     setNewRequest({ team: '', location: '', people: '', priority: 'High', needs: 'Food & Water' });
     setShowRequestForm(false);
   };
