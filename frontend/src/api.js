@@ -21,6 +21,7 @@ export const api = {
   signup: (payload) => request('/auth/signup', { method: 'POST', body: payload }),
   login: (payload) => request('/auth/login', { method: 'POST', body: payload }),
   getMe: (token) => request('/auth/me', { token }),
+  health: () => request('/health'),
 
   getShelters: (token) => request('/shelters', { token }),
   getShelter: (id, token) => request(`/shelters/${id}`, { token }),

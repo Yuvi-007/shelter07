@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminUsers from './pages/AdminUsers';
 import ManagerDashboard from './pages/ManagerDashboard';
 import AuthorityDashboard from './pages/AuthorityDashboard';
 import ShelterDetail from './pages/ShelterDetail';
@@ -27,6 +28,9 @@ export default function App() {
 
             <Route path="/admin" element={
               <ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>
+            } />
+            <Route path="/admin/users" element={
+              <ProtectedRoute roles={['admin']}><AdminUsers /></ProtectedRoute>
             } />
             <Route path="/manager" element={
               <ProtectedRoute roles={['manager']}><ManagerDashboard /></ProtectedRoute>
