@@ -178,10 +178,7 @@ export default function AuthorityDashboard() {
       {/* Editorial Header */}
       <div className="authority-hero-header">
         <p className="section-eyebrow">AUTHORITY CONTROL CENTER</p>
-        <h1>Emergency Shelter Operations</h1>
-        <p>
-          Real-time occupancy tracking, predictive capacity risk analysis, and coordinated evacuee redistribution.
-        </p>
+        <h1>Welcome, Authority</h1>
       </div>
 
       {/* Clean Minimalist Tab Switcher */}

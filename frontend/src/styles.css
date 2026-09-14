@@ -386,7 +386,7 @@ button.btn.ghost.hero-secondary { color: #fff; border-color: #cfd6e4; background
 }
 
 .authority-hero-header {
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 .authority-hero-header .section-eyebrow {
@@ -394,17 +394,13 @@ button.btn.ghost.hero-secondary { color: #fff; border-color: #cfd6e4; background
 }
 
 .authority-hero-header h1 {
-  font-size: 32px;
-  line-height: 1.2;
-  margin: 0 0 10px;
-  color: var(--navy);
-}
-
-.authority-hero-header p {
-  color: var(--slate);
-  font-size: 16px;
+  font-size: 38px;
+  line-height: 1.15;
   margin: 0;
-  max-width: 65ch;
+  color: var(--navy);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 /* Minimalist Horizontal Tab Navigation */
