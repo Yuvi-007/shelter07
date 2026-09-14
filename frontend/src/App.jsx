@@ -27,6 +27,7 @@ export default function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/request-shelter" element={<CitizenRequestShelter />} />
+            <Route path="/user" element={<CitizenRequestShelter />} />
 
             <Route path="/admin" element={
               <ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>

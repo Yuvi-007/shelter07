@@ -6,7 +6,13 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const dashboardPath = auth
-    ? { admin: '/admin', manager: '/manager', user: '/authority' }[auth.user.role]
+    ? auth.user.role === 'admin'
+      ? '/admin'
+      : auth.user.role === 'manager'
+      ? '/manager'
+      : auth.user.role === 'authority' || auth.user.email?.toLowerCase().startsWith('authority@')
+      ? '/authority'
+      : '/user'
     : '/';
 
   const handleLogout = () => {
@@ -23,11 +29,11 @@ export default function Navbar() {
         {auth ? (
           <>
             <Link to={dashboardPath}>Dashboard</Link>
-            {auth.user.role === 'admin' && (
+            {(auth.user.role === 'admin' || auth.user.role === 'authority') && (
               <Link to="/authority" style={{ color: '#e2986b' }}>Authority View</Link>
             )}
             <span className="pill">
-              {auth.user.name} · {auth.user.role === 'user' ? 'Authority' : auth.user.role}
+              {auth.user.name} · {auth.user.role === 'authority' || auth.user.email?.toLowerCase().startsWith('authority@') ? 'Authority' : auth.user.role === 'admin' ? 'Admin' : auth.user.role === 'manager' ? 'Manager' : 'User'}
             </span>
             <button onClick={handleLogout}>Log out</button>
           </>

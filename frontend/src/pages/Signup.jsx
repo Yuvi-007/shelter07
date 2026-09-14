@@ -26,7 +26,14 @@ export default function Signup() {
     try {
       const data = await api.signup({ ...form, confirm_password: confirmPassword });
       login(data);
-      const dest = { admin: '/admin', manager: '/manager', user: '/authority' }[data.user.role] || '/';
+      const dest =
+        data.user.role === 'admin'
+          ? '/admin'
+          : data.user.role === 'manager'
+          ? '/manager'
+          : data.user.role === 'authority' || data.user.email?.toLowerCase().startsWith('authority@')
+          ? '/authority'
+          : '/user';
       navigate(dest);
     } catch (err) {
       setError(err.message);
