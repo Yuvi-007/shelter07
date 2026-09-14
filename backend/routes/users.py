@@ -73,6 +73,10 @@ def delete_user(user_id):
         if cursor.fetchone():
             return jsonify({"error": "Users with role request history cannot be deleted"}), 400
 
+        cursor.execute("SELECT id FROM shelter_requests WHERE user_id = %s LIMIT 1", (user_id,))
+        if cursor.fetchone():
+            return jsonify({"error": "Users with shelter request history cannot be deleted"}), 400
+
         cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
         conn.commit()
         return jsonify({"message": "User deleted", "user_id": user_id})

@@ -43,6 +43,7 @@ export default function ManagerDashboard() {
   const [shelter, setShelter] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [recentLogs, setRecentLogs] = useState([]);
+  const [shelterRequests, setShelterRequests] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -59,15 +60,17 @@ export default function ManagerDashboard() {
     setError('');
 
     try {
-      const [shelterData, predictionData, logsData] = await Promise.all([
+      const [shelterData, predictionData, logsData, requestsData] = await Promise.all([
         api.getShelter(currentShelterId, token),
         api.predict(currentShelterId, token).catch(() => null),
         api.getOccupancyLogs(currentShelterId, token).catch(() => []),
+        api.getManagerShelterRequests(token).catch(() => []),
       ]);
 
       setShelter(shelterData);
       setPrediction(predictionData);
       setRecentLogs(Array.isArray(logsData) ? logsData.slice(0, 5) : []);
+      setShelterRequests(Array.isArray(requestsData) ? requestsData : []);
       setOccupancyInput(String(shelterData.current_occupancy));
     } catch (err) {
       setError(err.message || 'Unable to load assigned shelter data.');
@@ -132,6 +135,17 @@ export default function ManagerDashboard() {
       setFormError(err.message || 'Failed to update occupancy headcount.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleRequestStatusUpdate = async (requestId, status) => {
+    try {
+      const updatedRequest = await api.updateShelterRequestStatus(requestId, status, token);
+      setShelterRequests((requests) => requests.map((item) => (
+        item.id === requestId ? updatedRequest : item
+      )));
+    } catch (err) {
+      setError(err.message || 'Unable to update shelter request status.');
     }
   };
 
@@ -579,6 +593,60 @@ export default function ManagerDashboard() {
           </div>
         </section>
       </div>
+
+      <section className="admin-main-card" style={{ marginTop: '24px' }} aria-labelledby="shelter-requests-heading">
+        <div className="admin-users-toolbar">
+          <div className="admin-toolbar-title">
+            <h2 id="shelter-requests-heading">Shelter Requests</h2>
+            <p>Citizen allocation requests submitted for this shelter.</p>
+          </div>
+        </div>
+
+        {shelterRequests.length === 0 ? (
+          <p className="muted" style={{ padding: '12px 0', margin: 0 }}>
+            No shelter requests have been submitted for this facility yet.
+          </p>
+        ) : (
+          <div className="admin-users-table-wrap">
+            <table className="admin-table" aria-label="Shelter requests table">
+              <thead>
+                <tr>
+                  <th scope="col">Citizen</th>
+                  <th scope="col">Shelter</th>
+                  <th scope="col">People</th>
+                  <th scope="col">Requested</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {shelterRequests.map((shelterRequest) => (
+                  <tr key={shelterRequest.id}>
+                    <td>
+                      <strong>{shelterRequest.user_name}</strong>
+                      <br />
+                      <span className="muted">{shelterRequest.user_email}</span>
+                    </td>
+                    <td>{shelterRequest.shelter_name}</td>
+                    <td>{shelterRequest.people_count}</td>
+                    <td>{shelterRequest.created_at ? new Date(shelterRequest.created_at).toLocaleString() : '—'}</td>
+                    <td>
+                      <select
+                        value={shelterRequest.status}
+                        onChange={(e) => handleRequestStatusUpdate(shelterRequest.id, e.target.value)}
+                        aria-label={`Update status for request ${shelterRequest.id}`}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {/* Recent Occupancy Audit Activity */}
       <section className="admin-main-card" style={{ marginTop: '24px' }} aria-labelledby="recent-activity-heading">

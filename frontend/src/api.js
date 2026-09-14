@@ -50,6 +50,12 @@ export const api = {
     request('/redistribute/confirm', { method: 'POST', body: payload, token }),
   getRedistributionLog: (token) => request('/redistribute/log', { token }),
 
+  createShelterRequest: (payload, token) =>
+    request('/shelter-requests', { method: 'POST', body: payload, token }),
+  getManagerShelterRequests: (token) => request('/shelter-requests/manager', { token }),
+  updateShelterRequestStatus: (requestId, status, token) =>
+    request(`/shelter-requests/${requestId}/status`, { method: 'PATCH', body: { status }, token }),
+
   getUsers: (token) => request('/users', { token }),
   createRoleRequest: (requested_role, token) =>
     request('/role-requests', { method: 'POST', body: { requested_role }, token }),

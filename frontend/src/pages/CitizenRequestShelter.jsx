@@ -113,7 +113,7 @@ export default function CitizenRequestShelter() {
     setSelectedShelter(null);
   };
 
-  const handleSubmitRequest = (e) => {
+  const handleSubmitRequest = async (e) => {
     e.preventDefault();
     if (!contactName || !contactPhone) return;
 
@@ -126,15 +126,26 @@ export default function CitizenRequestShelter() {
     if (needsWater) specialNeedsList.push('Drinking Water');
     if (additionalNotes) specialNeedsList.push(additionalNotes);
 
+    try {
+      const token = JSON.parse(localStorage.getItem('shelterx_auth') || '{}')?.token;
+      const savedRequest = await api.createShelterRequest({
+        shelter_id: selectedShelter.id,
+        people_count: parseInt(groupSize, 10),
+        contact_name: contactName,
+        contact_phone: contactPhone,
+        preferred_location: location.trim(),
+        special_requirements: specialNeedsList.join(' · '),
+      }, token);
+
     const newReq = {
-      id: `REQ-${Math.floor(100 + Math.random() * 900)}`,
+      id: `REQ-${savedRequest.id}`,
       team: `${contactName} (Family of ${groupSize})`,
-      location: location.trim() || 'Unspecified Location',
-      people: parseInt(groupSize, 10),
+      location: savedRequest.preferred_location || 'Unspecified Location',
+      people: savedRequest.people_count,
       priority: needsMedical ? 'Critical' : 'High',
       needs: specialNeedsList.join(' · '),
-      status: 'Pending',
-      assignedShelter: selectedShelter?.name || null,
+      status: savedRequest.status.charAt(0).toUpperCase() + savedRequest.status.slice(1),
+      assignedShelter: savedRequest.shelter_name || selectedShelter.name,
       phone: contactPhone,
       time: 'Just now',
     };
@@ -149,11 +160,15 @@ export default function CitizenRequestShelter() {
     }
 
     setActiveRequest(newReq);
-    setSubmitting(false);
     setSelectedShelter(null);
     setContactName('');
     setContactPhone('');
     setAdditionalNotes('');
+    } catch (err) {
+      setError(err.message || 'Unable to submit shelter request. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

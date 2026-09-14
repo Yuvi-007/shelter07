@@ -10,6 +10,7 @@ from routes.redistribute import redistribute_bp
 from routes.users import users_bp
 from routes.role_requests import role_requests_bp
 from routes.disasters import disasters_bp
+from routes.shelter_requests import shelter_requests_bp
 
 
 def create_app():
@@ -26,6 +27,7 @@ def create_app():
     app.register_blueprint(users_bp)
     app.register_blueprint(role_requests_bp)
     app.register_blueprint(disasters_bp)
+    app.register_blueprint(shelter_requests_bp)
 
     @app.route("/api/health", methods=["GET"])
     def health():
